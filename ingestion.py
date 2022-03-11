@@ -6,9 +6,18 @@ from pathlib import Path
 import pandas as pd
 
 
-def merge_multiple_dataframe(input_folder_path, output_folder_path):
-    # check for datasets
+def merge_multiple_dataframe():
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    input_folder_path = config['input_folder_path']
+    output_folder_path = config['output_folder_path']
+
     input_filenames = list(Path(input_folder_path).glob("*.csv"))
+    output_filename = Path(output_folder_path) / Path("finaldata.csv")
+    log_filename = Path(output_folder_path) / Path("ingestedfiles.txt")
+
+    # check for datasets
     logging.info("Found %i datasets", len(input_filenames))
 
     # compile them together,
@@ -21,12 +30,10 @@ def merge_multiple_dataframe(input_folder_path, output_folder_path):
     logging.info("After removing duplicates: %i", len(combined_dataset))
 
     # write to an output file
-    output_filename = Path(output_folder_path) / Path("finaldata.csv")
     logging.info("Writing dataset to %s", output_filename)
     combined_dataset.to_csv(output_filename, index=False)
 
     # log input files used
-    log_filename = Path(output_folder_path) / Path("ingestedfiles.txt")
     logging.info("Writing input file log to %s", log_filename)
     with open(log_filename, 'w') as lf:
         lf.write(str(datetime.now()))
@@ -38,12 +45,4 @@ def merge_multiple_dataframe(input_folder_path, output_folder_path):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-
-    # Load config.json and get input and output paths
-    with open('config.json', 'r') as f:
-        config = json.load(f)
-
-    input_folder_path = config['input_folder_path']
-    output_folder_path = config['output_folder_path']
-
-    merge_multiple_dataframe(input_folder_path, output_folder_path)
+    merge_multiple_dataframe()
