@@ -10,12 +10,9 @@ def merge_multiple_dataframe():
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    input_folder_path = config['input_folder_path']
-    output_folder_path = config['output_folder_path']
-
-    input_filenames = list(Path(input_folder_path).glob("*.csv"))
-    output_filename = Path(output_folder_path) / Path("finaldata.csv")
-    log_filename = Path(output_folder_path) / Path("ingestedfiles.txt")
+    input_filenames = list(Path(config['input_folder_path']).glob("*.csv"))
+    output_filename = Path(config['output_folder_path']) / Path("finaldata.csv")
+    log_filename = Path(config['output_folder_path']) / Path("ingestedfiles.txt")
 
     # check for datasets
     logging.info("Found %i datasets", len(input_filenames))
