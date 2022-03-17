@@ -25,7 +25,11 @@ def model_predictions(dataset, model_path):
     return y_pred
 
 
-def dataframe_summary(dataset_path) -> list:
+def dataframe_summary() -> list:
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    dataset_path = Path(config["output_folder_path"]) / Path("finaldata.csv")
+
     logging.info("Calculating summary statistics for %s", dataset_path)
     dataset = pd.read_csv(dataset_path)
     summary = []
@@ -42,7 +46,11 @@ def dataframe_summary(dataset_path) -> list:
     return summary
 
 
-def check_missing_data(dataset_path) -> list:
+def check_missing_data() -> list:
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    dataset_path = Path(config["output_folder_path"]) / Path("finaldata.csv")
+
     logging.info("Checking for missing data in %s", dataset_path)
     dataset = pd.read_csv(dataset_path)
     na_pcts = []
@@ -90,11 +98,10 @@ if __name__ == '__main__':
 
     saved_model_path = Path(config['prod_deployment_path']) / Path("trainedmodel.pkl")
     dataset_path = Path(config["output_folder_path"]) / Path("finaldata.csv")
-
     dataset = pd.read_csv(dataset_path)
 
     model_predictions(dataset, saved_model_path)
-    dataframe_summary(dataset_path)
-    check_missing_data(dataset_path)
+    dataframe_summary()
+    check_missing_data()
     execution_time()
     outdated_packages_list()
