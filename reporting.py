@@ -22,7 +22,7 @@ def score_model(test_file_path, model_file_path, output_path):
     plt.savefig(figure_path)
 
 
-if __name__ == '__main__':
+def run():
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -31,3 +31,7 @@ if __name__ == '__main__':
     output_folder = Path(config["output_model_path"])
 
     score_model(test_csv_path, saved_model_path, output_folder)
+
+
+if __name__ == '__main__':
+    run()

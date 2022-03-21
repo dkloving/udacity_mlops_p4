@@ -7,11 +7,13 @@ import pandas as pd
 from sklearn import metrics
 
 
-def score_model():
+def score_model(test_data_path=None):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    test_data_path = Path(config['test_data_path']) / Path("testdata.csv")
+    if not test_data_path:
+        test_data_path = Path(config['test_data_path']) / Path("testdata.csv")
+
     trained_model_path = Path(config['output_model_path']) / Path("trainedmodel.pkl")
 
     logging.info("Reading data from %s", test_data_path)

@@ -3,7 +3,8 @@ from pathlib import Path
 
 import requests
 
-if __name__ == "__main__":
+
+def run():
     # Specify a URL that resolves to your workspace
     URL = "http://127.0.0.1:8000"
 
@@ -30,3 +31,7 @@ if __name__ == "__main__":
 
     with open(api_returns_path, "w") as f:
         f.write(json.dumps(responses))
+
+
+if __name__ == "__main__":
+    run()

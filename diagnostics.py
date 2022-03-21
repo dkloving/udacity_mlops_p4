@@ -92,7 +92,7 @@ def outdated_packages_list():
     return df
 
 
-if __name__ == '__main__':
+def run():
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -105,3 +105,7 @@ if __name__ == '__main__':
     check_missing_data()
     execution_time()
     outdated_packages_list()
+
+
+if __name__ == '__main__':
+    run()
