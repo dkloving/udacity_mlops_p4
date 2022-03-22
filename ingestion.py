@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from db import ProjectDB
+from dbsetup import ProjectDB
 
 
 def merge_multiple_dataframe():
@@ -34,9 +34,8 @@ def merge_multiple_dataframe():
 
     # log input files used
     logging.info("Writing input file log to %s", log_filename)
-    creation_date = str(datetime.now())
     with open(log_filename, 'w') as lf:
-        lf.write(creation_date)
+        lf.write(str(datetime.now()))
         lf.write('\n')
         for fn in input_filenames:
             lf.write(str(fn))
@@ -51,8 +50,7 @@ def merge_multiple_dataframe():
         dataset = combined_dataset.to_csv()
         db.insert_dataset(
             input_filenames=input_filenames,
-            dataset=dataset,
-            creation_date=creation_date
+            dataset=dataset
         )
     else:
         logging.info("Dataset with these file names already exists in sqlite, not saving.")

@@ -1,10 +1,11 @@
 import json
 import logging
-import pickle
 from pathlib import Path
 
 import pandas as pd
 from sklearn import metrics
+
+from dbsetup import ProjectDB
 
 
 def score_model(test_data_path=None):
@@ -14,14 +15,13 @@ def score_model(test_data_path=None):
     if not test_data_path:
         test_data_path = Path(config['test_data_path']) / Path("testdata.csv")
 
-    trained_model_path = Path(config['output_model_path']) / Path("trainedmodel.pkl")
-
     logging.info("Reading data from %s", test_data_path)
     test_data = pd.read_csv(test_data_path)
 
-    logging.info("Reading model from %s", trained_model_path)
-    with open(trained_model_path, 'rb') as file:
-        clf = pickle.load(file)
+    logging.info("Reading latest model from sqlite")
+    db = ProjectDB()
+    model_obj = db.get_latest_model()
+    clf = model_obj['model']
 
     y = test_data["exited"]
     X = test_data[[
@@ -47,6 +47,11 @@ def write_score():
     logging.info("Writing score to %s", test_result_path)
     with open(test_result_path, 'w') as file:
         file.write(str(score))
+
+    logging.info("Writing score to sqlite")
+    db = ProjectDB()
+    model_obj = db.get_latest_model()
+    db.insert_score(score=score, model_id=model_obj['id'])
 
 
 if __name__ == "__main__":
