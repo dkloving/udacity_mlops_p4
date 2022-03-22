@@ -8,7 +8,7 @@ import pandas as pd
 from dbsetup import ProjectDB
 
 
-def merge_multiple_dataframe():
+def merge_multiple_dataframe(write_db=True, write_file=False):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -32,30 +32,26 @@ def merge_multiple_dataframe():
     logging.info("Writing dataset to %s", output_filename)
     combined_dataset.to_csv(output_filename, index=False)
 
-    # log input files used
-    logging.info("Writing input file log to %s", log_filename)
-    with open(log_filename, 'w') as lf:
-        lf.write(str(datetime.now()))
-        lf.write('\n')
-        for fn in input_filenames:
-            lf.write(str(fn))
+    if write_file:
+        # log input files used
+        logging.info("Writing input file log to %s", log_filename)
+        with open(log_filename, 'w') as lf:
+            lf.write(str(datetime.now()))
             lf.write('\n')
+            for fn in input_filenames:
+                lf.write(str(fn))
+                lf.write('\n')
 
-    # write to db
-    db = ProjectDB()
-    input_filenames = ','.join(map(str, input_filenames))
-    last_dataset = db.get_latest_dataset()
-    if not last_dataset['file_list'] == input_filenames:
-        logging.info("Writing to sqlite")
+    if write_db:
+        # write to db
+        db = ProjectDB()
+        input_filenames = ','.join(map(str, input_filenames))
         dataset = combined_dataset.to_csv()
         db.insert_dataset(
             input_filenames=input_filenames,
             dataset=dataset
         )
-    else:
-        logging.info("Dataset with these file names already exists in sqlite, not saving.")
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    merge_multiple_dataframe()
+    merge_multiple_dataframe(write_db=False)

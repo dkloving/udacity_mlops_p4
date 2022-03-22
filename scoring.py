@@ -8,21 +8,9 @@ from sklearn import metrics
 from dbsetup import ProjectDB
 
 
-def score_model(test_data_path=None):
-    with open('config.json', 'r') as f:
-        config = json.load(f)
-
-    if not test_data_path:
-        test_data_path = Path(config['test_data_path']) / Path("testdata.csv")
-
-    logging.info("Reading data from %s", test_data_path)
-    test_data = pd.read_csv(test_data_path)
-
-    logging.info("Reading latest model from sqlite")
-    db = ProjectDB()
-    model_obj = db.get_latest_model()
-    clf = model_obj['model']
-
+def score_model(test_data, model):
+    """Scores the latest model on an input dataframe
+    """
     y = test_data["exited"]
     X = test_data[[
         "lastmonth_activity",
@@ -30,14 +18,36 @@ def score_model(test_data_path=None):
         "number_of_employees",
     ]]
 
-    y_pred = clf.predict(X)
+    y_pred = model.predict(X)
     score = metrics.f1_score(y, y_pred)
     logging.info("Test score: %f", score)
     return score
 
 
-def write_score():
-    score = score_model()
+def score_on_test_file():
+    """Scores the latest model on the testdata.csv file
+    """
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+
+    test_data_path = Path(config['test_data_path']) / Path("testdata.csv")
+
+    logging.info("Reading data from %s", test_data_path)
+    test_data = pd.read_csv(test_data_path)
+
+    logging.info("Reading latest model from sqlite")
+    db = ProjectDB()
+    model_obj = db.get_latest_model()
+    model = model_obj['model']
+
+    score = score_model(test_data, model)
+    return score
+
+
+def write_test_score():
+    """Scores the latest model on testdata.csv and saves score to a text file.
+    """
+    score = score_on_test_file()
 
     with open('config.json', 'r') as f:
         config = json.load(f)
@@ -48,12 +58,6 @@ def write_score():
     with open(test_result_path, 'w') as file:
         file.write(str(score))
 
-    logging.info("Writing score to sqlite")
-    db = ProjectDB()
-    model_obj = db.get_latest_model()
-    db.insert_score(score=score, model_id=model_obj['id'])
-
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
-    write_score()
+    write_test_score()

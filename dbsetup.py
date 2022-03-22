@@ -3,7 +3,6 @@ import json
 import logging
 import pickle
 import sqlite3
-from datetime import datetime
 
 import pandas as pd
 
@@ -30,46 +29,64 @@ class ProjectDB:
 
         # create dataset table
         cls._cursor.execute("""CREATE TABLE IF NOT EXISTS datasets(
-            datasetid INT PRIMARY KEY,
+            id INT PRIMARY KEY,
             input_filenames TEXT,
             dataset TEXT,
-            creation_time TEXT
+            creation_time TEXT default CURRENT_TIMESTAMP
         );""")
 
         # create models table
         cls._cursor.execute("""CREATE TABLE IF NOT EXISTS models(
-            modelid INT PRIMARY KEY,
+            id INT PRIMARY KEY,
             model_pkl BLOB,
             training_dataset INT,
-            creation_date TEXT,
+            creation_date TEXT default CURRENT_TIMESTAMP,
             FOREIGN KEY(training_dataset) REFERENCES datasets(datasetid)
         );""")
 
-        # create scores table
-        cls._cursor.execute("""CREATE TABLE IF NOT EXISTS scores(
-            scoreid INT PRIMARY KEY,
+        # create diagnostics table
+        cls._cursor.execute("""CREATE TABLE IF NOT EXISTS diagnostics(
+            id INT PRIMARY KEY,
+            datasetid INT,
             modelid INT,
-            f1 FLOAT,
-            creation_date TEXT,
-            FOREIGN KEY(modelid) REFERENCES models(modelid)
+            lastmonth_mean FLOAT,
+            lastmonth_median FLOAT,
+            lastmonth_stddev FLOAT,
+            lastmonth_missing FLOAT,
+            lastyear_mean FLOAT,
+            lastyear_median FLOAT,
+            lastyear_stddev FLOAT,
+            lastyear_missing FLOAT,
+            number_of_employees_mean FLOAT,
+            number_of_employees_median FLOAT,
+            number_of_employees_stddev FLOAT,
+            number_of_employees_missing FLOAT,
+            ingestion_time FLOAT,
+            training_time FLOAT,
+            f1_score FLOAT,
+            packages TEXT,
+            creation_date TEXT default CURRENT_TIMESTAMP,
+            FOREIGN KEY(modelid) REFERENCES models(modelid),
+            FOREIGN KEY(datasetid) REFERENCES datasets(datasetid)
         );""")
 
     @classmethod
     def insert_dataset(cls, input_filenames, dataset):
+        logging.info("Writing dataset to db")
         cls._cursor.execute("SELECT * FROM datasets")
         result = cls._cursor.fetchall()
         next_id = len(result)
 
         cls._cursor.execute(
-            "INSERT INTO datasets VALUES(?, ?, ?, ?);",
-            (next_id, input_filenames, dataset, str(datetime.now()))
+            "INSERT INTO datasets(id, input_filenames, dataset) VALUES(?, ?, ?);",
+            (next_id, input_filenames, dataset)
         )
         cls._connection.commit()
 
     @ classmethod
     def get_latest_dataset(cls):
         dset = {'id': None, 'file_list': None, 'data': None, 'creation_date': None}
-        cls._cursor.execute("SELECT * FROM datasets ORDER BY datasetid DESC;")
+        cls._cursor.execute("SELECT * FROM datasets ORDER BY id DESC;")
         latest_dataset = cls._cursor.fetchone()
         if latest_dataset is not None:
             dset['id'] = latest_dataset[0]
@@ -80,6 +97,7 @@ class ProjectDB:
 
     @classmethod
     def insert_model(cls, model, training_dataset_id):
+        logging.info("Writing model to db")
         cls._cursor.execute("SELECT * FROM models")
         result = cls._cursor.fetchall()
         next_id = len(result)
@@ -87,15 +105,15 @@ class ProjectDB:
         model_txt = pickle.dumps(model)
 
         cls._cursor.execute(
-            "INSERT INTO models VALUES(?, ?, ?, ?);",
-            (next_id, model_txt, training_dataset_id, str(datetime.now()))
+            "INSERT INTO models(id, model_pkl, training_dataset) VALUES(?, ?, ?);",
+            (next_id, model_txt, training_dataset_id)
         )
         cls._connection.commit()
 
     @ classmethod
     def get_latest_model(cls):
         model = {'id': None, 'model_pkl': None, 'training_dataset': None, 'creation_date': None}
-        cls._cursor.execute("SELECT * FROM models ORDER BY modelid DESC;")
+        cls._cursor.execute("SELECT * FROM models ORDER BY id DESC;")
         latest_dataset = cls._cursor.fetchone()
         if latest_dataset is not None:
             model['id'] = latest_dataset[0]
@@ -105,14 +123,78 @@ class ProjectDB:
         return model
 
     @classmethod
-    def insert_score(cls, score, model_id):
-        cls._cursor.execute("SELECT * FROM scores")
+    def insert_diagnostics(
+            cls,
+            dataset_id,
+            model_id,
+            lastmonth_activity_mean,
+            lastmonth_activity_median,
+            lastmonth_activity_stddev,
+            lastmonth_activity_missing,
+            lastyear_activity_mean,
+            lastyear_activity_median,
+            lastyear_activity_stddev,
+            lastyear_activity_missing,
+            number_of_employees_mean,
+            number_of_employees_median,
+            number_of_employees_stddev,
+            number_of_employees_missing,
+            ingestion_time,
+            training_time,
+            f1_score,
+            packages_csv
+    ):
+        logging.info("Writing diagnostics to db")
+        cls._cursor.execute("SELECT * FROM diagnostics ")
         result = cls._cursor.fetchall()
         next_id = len(result)
 
         cls._cursor.execute(
-            "INSERT INTO scores VALUES(?, ?, ?, ?);",
-            (next_id, model_id, score, str(datetime.now()))
+            """
+                INSERT INTO diagnostics(
+                    id,
+                    datasetid,
+                    modelid,
+                    lastmonth_mean,
+                    lastmonth_median,
+                    lastmonth_stddev,
+                    lastmonth_missing,
+                    lastyear_mean,
+                    lastyear_median,
+                    lastyear_stddev,
+                    lastyear_missing,
+                    number_of_employees_mean,
+                    number_of_employees_median,
+                    number_of_employees_stddev,
+                    number_of_employees_missing,
+                    ingestion_time,
+                    training_time,
+                    f1_score,
+                    packages
+                )
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """,
+            (
+                next_id,
+                dataset_id,
+                model_id,
+                lastmonth_activity_mean,
+                lastmonth_activity_median,
+                lastmonth_activity_stddev,
+                lastmonth_activity_missing,
+                lastyear_activity_mean,
+                lastyear_activity_median,
+                lastyear_activity_stddev,
+                lastyear_activity_missing,
+                number_of_employees_mean,
+                number_of_employees_median,
+                number_of_employees_stddev,
+                number_of_employees_missing,
+                ingestion_time,
+                training_time,
+                f1_score,
+                packages_csv
+            )
         )
         cls._connection.commit()
 

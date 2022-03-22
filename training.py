@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from dbsetup import ProjectDB
 
 
-def train_model():
+def train_model(write_db=True, write_file=False):
     with open('config.json', 'r') as f:
         config = json.load(f)
 
@@ -37,14 +37,14 @@ def train_model():
     clf.fit(X, y)
     logging.info("Score on training data: %f", clf.score(X, y))
 
-    logging.info("Saving model to %s", model_path)
-    with open(model_path, 'wb') as file:
-        pickle.dump(clf, file)
+    if write_file:
+        logging.info("Saving model to %s", model_path)
+        with open(model_path, 'wb') as file:
+            pickle.dump(clf, file)
 
-    logging.info("Saving model to sqlite")
-    db.insert_model(model=clf, training_dataset_id=dataset_obj['id'])
+    if write_db:
+        db.insert_model(model=clf, training_dataset_id=dataset_obj['id'])
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
-    train_model()
+    train_model(write_db=False)
