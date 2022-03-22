@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from db import ProjectDB
+
 
 def merge_multiple_dataframe():
     with open('config.json', 'r') as f:
@@ -38,6 +40,13 @@ def merge_multiple_dataframe():
         for fn in input_filenames:
             lf.write(str(fn))
             lf.write('\n')
+
+    # write to db
+    logging.info("Writing to sqlite")
+    db = ProjectDB()
+    input_filenames = ','.join(map(str, input_filenames))
+    dataset = combined_dataset.to_csv()
+    db.insert_dataset(input_filenames=input_filenames, dataset=dataset)
 
 
 if __name__ == '__main__':
