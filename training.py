@@ -9,10 +9,13 @@ from dbsetup import ProjectDB
 
 
 def train_model(write_db=True, write_file=False):
+    """Train a logistic regression classifier on the latest dataset and save it.
+
+    :param write_db: write model to database
+    :param write_file: write model to file
+    """
     with open('config.json', 'r') as f:
         config = json.load(f)
-
-    model_path = Path(config['output_model_path']) / Path("trainedmodel.pkl")
 
     logging.info("Reading latest data from sqlite")
     db = ProjectDB()
@@ -38,6 +41,7 @@ def train_model(write_db=True, write_file=False):
     logging.info("Score on training data: %f", clf.score(X, y))
 
     if write_file:
+        model_path = Path(config['output_model_path']) / Path("trainedmodel.pkl")
         logging.info("Saving model to %s", model_path)
         with open(model_path, 'wb') as file:
             pickle.dump(clf, file)

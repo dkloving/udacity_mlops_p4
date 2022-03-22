@@ -25,7 +25,7 @@ def score_model(test_data, model):
 
 
 def score_on_test_file():
-    """Scores the latest model on the testdata.csv file
+    """Scores the latest model on the test dataset in `test_data_path`
     """
     with open('config.json', 'r') as f:
         config = json.load(f)
@@ -45,7 +45,7 @@ def score_on_test_file():
 
 
 def write_test_score():
-    """Scores the latest model on testdata.csv and saves score to a text file.
+    """Scores the latest model on testdata.csv and saves score to a text file in `output_model_path`.
     """
     score = score_on_test_file()
 

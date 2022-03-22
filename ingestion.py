@@ -9,12 +9,16 @@ from dbsetup import ProjectDB
 
 
 def merge_multiple_dataframe(write_db=True, write_file=False):
+    """Reads all csv files in `input_folder_path` config variable and combines them into a single dataset.
+
+    :param write_db: write result to the database
+    :param write_file: write result to a file using `output_folder_path` config variable
+    """
     with open('config.json', 'r') as f:
         config = json.load(f)
 
     input_filenames = list(Path(config['input_folder_path']).glob("*.csv"))
     output_filename = Path(config['output_folder_path']) / Path("finaldata.csv")
-    log_filename = Path(config['output_folder_path']) / Path("ingestedfiles.txt")
 
     # check for datasets
     logging.info("Found %i datasets", len(input_filenames))
@@ -34,6 +38,7 @@ def merge_multiple_dataframe(write_db=True, write_file=False):
 
     if write_file:
         # log input files used
+        log_filename = Path(config['output_folder_path']) / Path("ingestedfiles.txt")
         logging.info("Writing input file log to %s", log_filename)
         with open(log_filename, 'w') as lf:
             lf.write(str(datetime.now()))
