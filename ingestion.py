@@ -34,19 +34,28 @@ def merge_multiple_dataframe():
 
     # log input files used
     logging.info("Writing input file log to %s", log_filename)
+    creation_date = str(datetime.now())
     with open(log_filename, 'w') as lf:
-        lf.write(str(datetime.now()))
+        lf.write(creation_date)
         lf.write('\n')
         for fn in input_filenames:
             lf.write(str(fn))
             lf.write('\n')
 
     # write to db
-    logging.info("Writing to sqlite")
     db = ProjectDB()
     input_filenames = ','.join(map(str, input_filenames))
-    dataset = combined_dataset.to_csv()
-    db.insert_dataset(input_filenames=input_filenames, dataset=dataset)
+    last_dataset = db.get_latest_dataset()
+    if not last_dataset['file_list'] == input_filenames:
+        logging.info("Writing to sqlite")
+        dataset = combined_dataset.to_csv()
+        db.insert_dataset(
+            input_filenames=input_filenames,
+            dataset=dataset,
+            creation_date=creation_date
+        )
+    else:
+        logging.info("Dataset with these file names already exists in sqlite, not saving.")
 
 
 if __name__ == '__main__':
