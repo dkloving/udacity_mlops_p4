@@ -78,16 +78,14 @@ if __name__ == '__main__':
 
         new_data = check_new_data(config, db)
         if not new_data:
-            # quit()
-            pass
+            quit()
 
         logging.info("Ingesting new data...")
         ingestion.merge_multiple_dataframe()
 
         model_drift = check_model_drift(config, db)
         if not model_drift:
-            # quit()
-            pass
+            quit()
 
     logging.info("Training and Scoring new model...")
     training.train_model()
