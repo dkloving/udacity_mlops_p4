@@ -5,6 +5,7 @@ To meet rubric requirements, this file can be run on its own to generate `ingest
 
 import json
 import logging
+import logging.config
 from datetime import datetime
 from pathlib import Path
 
@@ -64,4 +65,5 @@ def merge_multiple_dataframe(write_db=True, write_file=False):
 
 
 if __name__ == '__main__':
+    logging.config.fileConfig('logging.conf')
     merge_multiple_dataframe(write_db=False, write_file=True)
