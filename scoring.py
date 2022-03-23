@@ -1,5 +1,11 @@
+"""
+Provides functionality for scoring an ML model.
+To meet rubric requirements, this file can be ran independently to write the score to disk as `latestscore.txt`.
+"""
+
 import json
 import logging
+import logging.config
 from pathlib import Path
 
 import pandas as pd
@@ -60,4 +66,5 @@ def write_test_score():
 
 
 if __name__ == "__main__":
+    logging.config.fileConfig('logging.conf')
     write_test_score()

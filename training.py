@@ -1,6 +1,7 @@
 """
 Provides functionality for training an ML model.
-To meet rubric requirements, this model can be pickled and written to disk as `trainedmodel.pkl`.
+To meet rubric requirements, this file can be ran independently to pickle and
+write the model to disk as `trainedmodel.pkl`.
 """
 
 import json
