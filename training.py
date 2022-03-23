@@ -1,5 +1,11 @@
+"""
+Provides functionality for training an ML model.
+To meet rubric requirements, this model can be pickled and written to disk as `trainedmodel.pkl`.
+"""
+
 import json
 import logging
+import logging.config
 import pickle
 from pathlib import Path
 
@@ -51,4 +57,5 @@ def train_model(write_db=True, write_file=False):
 
 
 if __name__ == "__main__":
-    train_model(write_db=False)
+    logging.config.fileConfig('logging.conf')
+    train_model(write_db=False, write_file=True)
