@@ -36,5 +36,9 @@ The following diagnostic items are tracked for each dataset.
  - Model f1 score.
  - All pip packages installed, current and latest-available versions
 
+### Deployment
+For serving of the model and associated metrics, a number of files are written to a deployment folder specified in the config.
+ - `trainedmodel.pkl` 
+
 ### Pipeline Automation
 ![project pipeline](./images/pipeline.png)

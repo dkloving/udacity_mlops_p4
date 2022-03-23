@@ -24,25 +24,27 @@ def model_predictions(dataset, model):
     return y_pred
 
 
-def dataframe_summary(dataset) -> list:
+def dataframe_summary(dataset):
     """Column-wise summary statistics
     """
     logging.info("Calculating summary statistics")
-    summary = []
     numerical_cols = [
         "lastmonth_activity",
         "lastyear_activity",
         "number_of_employees",
     ]
 
+    summary = {key: [] for key in numerical_cols}
     for col in numerical_cols:
-        summary.append(dataset[col].mean())
-        summary.append(dataset[col].median())
-        summary.append(dataset[col].std())
+        summary[col].append(dataset[col].mean())
+        summary[col].append(dataset[col].median())
+        summary[col].append(dataset[col].std())
+
+    summary = pd.DataFrame(summary, index=['mean', 'median', 'stddev'])
     return summary
 
 
-def check_missing_data(dataset) -> list:
+def check_missing_data(dataset):
     """Column-wise percent of values missing
     """
     numerical_cols = [
@@ -51,11 +53,10 @@ def check_missing_data(dataset) -> list:
         "number_of_employees",
     ]
 
-    na_pcts = []
+    pct_na = {}
     for col in numerical_cols:
-        pct_na = dataset[col].isna().sum() / len(dataset)
-        na_pcts.append(pct_na)
-    return na_pcts
+        pct_na[col] = dataset[col].isna().sum() / len(dataset)
+    return pct_na
 
 
 def execution_time():
@@ -106,30 +107,34 @@ def run():
     model = model_obj['model']
 
     score = score_model(dataset, model)
-    lm_mean, lm_median, lm_std, ly_mean, ly_median, ly_std, ne_mean, ne_median, ne_std = dataframe_summary(dataset)
-    lm_missing, ly_missing, ne_missing = check_missing_data(dataset)
+    summary = dataframe_summary(dataset)
+    pct_missing = check_missing_data(dataset)
     ingestion_timing, training_timing = execution_time()
     packages_df = outdated_packages_list()
 
     db.insert_diagnostics(
         dataset_id=dataset_obj['id'],
         model_id=model_obj['id'],
-        lastmonth_activity_mean=lm_mean,
-        lastmonth_activity_median=lm_median,
-        lastmonth_activity_stddev=lm_std,
-        lastmonth_activity_missing=lm_missing,
-        lastyear_activity_mean=ly_mean,
-        lastyear_activity_median=ly_median,
-        lastyear_activity_stddev=ly_std,
-        lastyear_activity_missing=ly_missing,
-        number_of_employees_mean=ne_mean,
-        number_of_employees_median=ne_median,
-        number_of_employees_stddev=ne_std,
-        number_of_employees_missing=ne_missing,
         ingestion_time=ingestion_timing,
         training_time=training_timing,
         f1_score=score,
         packages_csv=packages_df.to_csv()
+    )
+
+    db.insert_dataset_summary(
+        dataset_id=dataset_obj['id'],
+        lastmonth_activity_mean=summary.loc['mean']['lastmonth_activity'],
+        lastmonth_activity_median=summary.loc['median']['lastmonth_activity'],
+        lastmonth_activity_stddev=summary.loc['stddev']['lastmonth_activity'],
+        lastmonth_activity_missing=pct_missing['lastmonth_activity'],
+        lastyear_activity_mean=summary.loc['mean']['lastyear_activity'],
+        lastyear_activity_median=summary.loc['median']['lastyear_activity'],
+        lastyear_activity_stddev=summary.loc['stddev']['lastyear_activity'],
+        lastyear_activity_missing=pct_missing['number_of_employees'],
+        number_of_employees_mean=summary.loc['mean']['number_of_employees'],
+        number_of_employees_median=summary.loc['median']['number_of_employees'],
+        number_of_employees_stddev=summary.loc['stddev']['number_of_employees'],
+        number_of_employees_missing=pct_missing['number_of_employees'],
     )
 
 

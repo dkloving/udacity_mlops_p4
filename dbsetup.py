@@ -49,6 +49,19 @@ class ProjectDB:
             id INT PRIMARY KEY,
             datasetid INT,
             modelid INT,
+            ingestion_time FLOAT,
+            training_time FLOAT,
+            f1_score FLOAT,
+            packages TEXT,
+            creation_date TEXT default CURRENT_TIMESTAMP,
+            FOREIGN KEY(modelid) REFERENCES models(modelid),
+            FOREIGN KEY(datasetid) REFERENCES datasets(datasetid)
+        );""")
+
+        # create dataset_summary table
+        cls._cursor.execute("""CREATE TABLE IF NOT EXISTS dataset_summary(
+            id INT PRIMARY KEY,
+            datasetid INT,
             lastmonth_mean FLOAT,
             lastmonth_median FLOAT,
             lastmonth_stddev FLOAT,
@@ -60,14 +73,7 @@ class ProjectDB:
             number_of_employees_mean FLOAT,
             number_of_employees_median FLOAT,
             number_of_employees_stddev FLOAT,
-            number_of_employees_missing FLOAT,
-            ingestion_time FLOAT,
-            training_time FLOAT,
-            f1_score FLOAT,
-            packages TEXT,
-            creation_date TEXT default CURRENT_TIMESTAMP,
-            FOREIGN KEY(modelid) REFERENCES models(modelid),
-            FOREIGN KEY(datasetid) REFERENCES datasets(datasetid)
+            number_of_employees_missing FLOAT
         );""")
 
     @classmethod
@@ -127,18 +133,6 @@ class ProjectDB:
             cls,
             dataset_id,
             model_id,
-            lastmonth_activity_mean,
-            lastmonth_activity_median,
-            lastmonth_activity_stddev,
-            lastmonth_activity_missing,
-            lastyear_activity_mean,
-            lastyear_activity_median,
-            lastyear_activity_stddev,
-            lastyear_activity_missing,
-            number_of_employees_mean,
-            number_of_employees_median,
-            number_of_employees_stddev,
-            number_of_employees_missing,
             ingestion_time,
             training_time,
             f1_score,
@@ -155,6 +149,63 @@ class ProjectDB:
                     id,
                     datasetid,
                     modelid,
+                    ingestion_time,
+                    training_time,
+                    f1_score,
+                    packages
+                )
+                VALUES(?, ?, ?, ?, ?, ?, ?);
+            """,
+            (
+                next_id,
+                dataset_id,
+                model_id,
+                ingestion_time,
+                training_time,
+                f1_score,
+                packages_csv
+            )
+        )
+        cls._connection.commit()
+
+    @classmethod
+    def get_diagnostics(cls, model_id):
+        cls._cursor.execute(f"SELECT * FROM diagnostics WHERE modelid={model_id} ORDER BY id DESC;")
+        diagnostics_list = cls._cursor.fetchone()
+        diagnostics = {
+            'ingestion_time': diagnostics_list[3],
+            'training_time': diagnostics_list[4],
+            'f1_score': diagnostics_list[5],
+            'packages': diagnostics_list[6]
+        }
+        return diagnostics
+
+    @classmethod
+    def insert_dataset_summary(
+            cls,
+            dataset_id,
+            lastmonth_activity_mean,
+            lastmonth_activity_median,
+            lastmonth_activity_stddev,
+            lastmonth_activity_missing,
+            lastyear_activity_mean,
+            lastyear_activity_median,
+            lastyear_activity_stddev,
+            lastyear_activity_missing,
+            number_of_employees_mean,
+            number_of_employees_median,
+            number_of_employees_stddev,
+            number_of_employees_missing,
+    ):
+        logging.info("Writing dataset summary to db")
+        cls._cursor.execute("SELECT * FROM dataset_summary")
+        result = cls._cursor.fetchall()
+        next_id = len(result)
+        cls._cursor.execute(
+            """
+                INSERT INTO dataset_summary(
+                    id,
+                    datasetid,
                     lastmonth_mean,
                     lastmonth_median,
                     lastmonth_stddev,
@@ -166,18 +217,12 @@ class ProjectDB:
                     number_of_employees_mean,
                     number_of_employees_median,
                     number_of_employees_stddev,
-                    number_of_employees_missing,
-                    ingestion_time,
-                    training_time,
-                    f1_score,
-                    packages
+                    number_of_employees_missing
                 )
-                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """,
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 next_id,
                 dataset_id,
-                model_id,
                 lastmonth_activity_mean,
                 lastmonth_activity_median,
                 lastmonth_activity_stddev,
@@ -190,13 +235,36 @@ class ProjectDB:
                 number_of_employees_median,
                 number_of_employees_stddev,
                 number_of_employees_missing,
-                ingestion_time,
-                training_time,
-                f1_score,
-                packages_csv
             )
         )
         cls._connection.commit()
+
+    @classmethod
+    def get_summary(cls, dataset_id):
+        cls._cursor.execute(f"SELECT * FROM dataset_summary WHERE datasetid={dataset_id} ORDER BY id DESC;")
+        summary_list = cls._cursor.fetchone()
+        summary = {
+            'lastmonth_activity': {
+                'mean': summary_list[2],
+                'median': summary_list[3],
+                'stddev': summary_list[4],
+                'missing': summary_list[5]
+            },
+            'lastyear_activity': {
+                'mean': summary_list[6],
+                'median': summary_list[7],
+                'stddev': summary_list[8],
+                'missing': summary_list[9]
+            },
+            'number_of_employees': {
+                'mean': summary_list[10],
+                'median': summary_list[11],
+                'stddev': summary_list[12],
+                'missing': summary_list[13]
+            }
+        }
+        summary = pd.DataFrame(summary)
+        return summary
 
 
 if __name__ == "__main__":
