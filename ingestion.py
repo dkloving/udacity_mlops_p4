@@ -1,3 +1,8 @@
+"""
+Provides functionality for reading and combining all data in a data folder.
+To meet rubric requirements, this file can be run on its own to generate `ingestedfiles.txt`.
+"""
+
 import json
 import logging
 from datetime import datetime
@@ -18,7 +23,6 @@ def merge_multiple_dataframe(write_db=True, write_file=False):
         config = json.load(f)
 
     input_filenames = list(Path(config['input_folder_path']).glob("*.csv"))
-    output_filename = Path(config['output_folder_path']) / Path("finaldata.csv")
 
     # check for datasets
     logging.info("Found %i datasets", len(input_filenames))
@@ -32,11 +36,12 @@ def merge_multiple_dataframe(write_db=True, write_file=False):
     combined_dataset = combined_dataset.drop_duplicates()
     logging.info("After removing duplicates: %i", len(combined_dataset))
 
-    # write to an output file
-    logging.info("Writing dataset to %s", output_filename)
-    combined_dataset.to_csv(output_filename, index=False)
-
     if write_file:
+        # write to an output file
+        output_filename = Path(config['output_folder_path']) / Path("finaldata.csv")
+        logging.info("Writing dataset to %s", output_filename)
+        combined_dataset.to_csv(output_filename, index=False)
+
         # log input files used
         log_filename = Path(config['output_folder_path']) / Path("ingestedfiles.txt")
         logging.info("Writing input file log to %s", log_filename)
@@ -59,4 +64,4 @@ def merge_multiple_dataframe(write_db=True, write_file=False):
 
 
 if __name__ == '__main__':
-    merge_multiple_dataframe(write_db=False)
+    merge_multiple_dataframe(write_db=False, write_file=True)
