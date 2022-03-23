@@ -1,8 +1,14 @@
+"""
+Functionality to plot and save a confusion matrix of the latest model on test data
+"""
+
 import json
 import logging
+import logging.config
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 from dbsetup import ProjectDB
@@ -31,13 +37,16 @@ def run():
     output_folder = Path(config["output_model_path"])
 
     db = ProjectDB()
-    dataset_obj = db.get_latest_dataset()
-    dataset = dataset_obj['data']
     model_obj = db.get_latest_model()
     model = model_obj['model']
 
-    make_confusion_matrix(dataset, model, output_folder)
+    test_data_path = Path(config['test_data_path']) / Path("testdata.csv")
+    logging.info("Reading data from %s", test_data_path)
+    test_data = pd.read_csv(test_data_path)
+
+    make_confusion_matrix(test_data, model, output_folder)
 
 
 if __name__ == '__main__':
+    logging.config.fileConfig('logging.conf')
     run()
