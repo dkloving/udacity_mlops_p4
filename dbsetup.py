@@ -8,7 +8,6 @@ import pandas as pd
 
 
 class ProjectDB:
-
     _instance = None
     _connection = None
     _cursor = None
@@ -89,10 +88,22 @@ class ProjectDB:
         )
         cls._connection.commit()
 
-    @ classmethod
+    @classmethod
     def get_latest_dataset(cls):
         dset = {'id': None, 'file_list': None, 'data': None, 'creation_date': None}
         cls._cursor.execute("SELECT * FROM datasets ORDER BY id DESC;")
+        latest_dataset = cls._cursor.fetchone()
+        if latest_dataset is not None:
+            dset['id'] = latest_dataset[0]
+            dset['file_list'] = latest_dataset[1].split(',')
+            dset['data'] = pd.read_csv(io.StringIO(latest_dataset[2]), index_col=0)
+            dset['creation_date'] = latest_dataset[3]
+        return dset
+
+    @classmethod
+    def get_dataset(cls, dataset_id):
+        dset = {'id': None, 'file_list': None, 'data': None, 'creation_date': None}
+        cls._cursor.execute(f"SELECT * FROM datasets WHERE id={dataset_id};")
         latest_dataset = cls._cursor.fetchone()
         if latest_dataset is not None:
             dset['id'] = latest_dataset[0]
@@ -116,7 +127,7 @@ class ProjectDB:
         )
         cls._connection.commit()
 
-    @ classmethod
+    @classmethod
     def get_latest_model(cls):
         model = {'id': None, 'model_pkl': None, 'training_dataset': None, 'creation_date': None}
         cls._cursor.execute("SELECT * FROM models ORDER BY id DESC;")
@@ -170,14 +181,14 @@ class ProjectDB:
 
     @classmethod
     def get_diagnostics(cls, model_id):
+        diagnostics = {'ingestion_time': None, 'training_time': None, 'f1_score': None, 'packages': None}
         cls._cursor.execute(f"SELECT * FROM diagnostics WHERE modelid={model_id} ORDER BY id DESC;")
         diagnostics_list = cls._cursor.fetchone()
-        diagnostics = {
-            'ingestion_time': diagnostics_list[3],
-            'training_time': diagnostics_list[4],
-            'f1_score': diagnostics_list[5],
-            'packages': diagnostics_list[6]
-        }
+        if diagnostics_list:
+            diagnostics['ingestion_time'] = diagnostics_list[3]
+            diagnostics['training_time'] = diagnostics_list[4]
+            diagnostics['f1_score'] = diagnostics_list[5]
+            diagnostics['packages'] = diagnostics_list[6]
         return diagnostics
 
     @classmethod
