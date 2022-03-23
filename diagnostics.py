@@ -1,4 +1,9 @@
+"""
+Includes all 'diagnostics' functionality required by project specifications.
+"""
+
 import logging
+import logging.config
 import os
 import subprocess
 import timeit
@@ -98,6 +103,8 @@ def outdated_packages_list():
 
 
 def run():
+    """Calculates all required reporting data and saves to database
+    """
     db = ProjectDB()
 
     dataset_obj = db.get_latest_dataset()
@@ -139,5 +146,5 @@ def run():
 
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.INFO)
+    logging.config.fileConfig('logging.conf')
     run()
