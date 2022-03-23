@@ -24,8 +24,8 @@ def deploy_latest():
     db = ProjectDB()
 
     model_obj = db.get_latest_model()
-    dataset_obj = db.get_latest_dataset()
-    diagnostics = db.get_diagnostics(dataset_obj['id'])
+    dataset_obj = db.get_dataset(model_obj['training_dataset'])
+    diagnostics = db.get_diagnostics(model_obj['id'])
     summary = db.get_summary(dataset_obj['id'])
 
     model_output_name = deployment_folder / Path("trainedmodel.pkl")
@@ -46,6 +46,8 @@ def deploy_latest():
 
     dataset_summary_name = deployment_folder / Path("dataset_summary.csv")
     summary.to_csv(dataset_summary_name)
+    
+    logging.info("Deployment completed")
 
 
 if __name__ == "__main__":
