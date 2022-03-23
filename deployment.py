@@ -1,34 +1,45 @@
+"""
+Provides functionality for 'deploying' an ML model.
+"""
+
 import json
 import logging
-import shutil
+import logging.config
+import pickle
 from pathlib import Path
 
-
-def copy_to_production(input_folder, output_folder, filename):
-    input_path = Path(input_folder) / Path(filename)
-    output_path = Path(output_folder) / Path(filename)
-    logging.info("Copying %s to %s", input_path, output_path)
-    shutil.copy(input_path, output_path)
+from dbsetup import ProjectDB
 
 
-def deploy():
+def deploy_latest():
+    """Writes latest model and associated reporting objects to a deployment folder
+    """
     with open('config.json', 'r') as f:
         config = json.load(f)
 
     deployment_folder = Path(config["prod_deployment_path"])
 
-    model_folder = Path(config['output_model_path'])
-    model_name = Path("trainedmodel.pkl")
-    copy_to_production(input_folder=model_folder, output_folder=deployment_folder, filename=model_name)
+    logging.info("Logging production artifacts to %s", deployment_folder)
 
-    test_result_filename = Path("latestscore.txt")
-    copy_to_production(input_folder=model_folder, output_folder=deployment_folder, filename=test_result_filename)
+    db = ProjectDB()
 
-    data_folder = Path(config['output_folder_path'])
-    datset_log_file = Path("ingestedfiles.txt")
-    copy_to_production(input_folder=data_folder, output_folder=deployment_folder, filename=datset_log_file)
+    model_obj = db.get_latest_model()
+    dataset_obj = db.get_latest_dataset()
+    diagnostics = db.get_diagnostics(dataset_obj['id'])
+
+    model_output_name = deployment_folder / Path("trainedmodel.pkl")
+    with open(model_output_name, 'wb') as file:
+        pickle.dump(model_obj['model'], file)
+
+    test_result_name = deployment_folder / Path("latestscore.txt")
+    with open(test_result_name, 'w') as file:
+        file.write(str(diagnostics['f1_score']))
+
+    dataset_log_name = deployment_folder / Path("ingestedfiles.txt")
+    with open(dataset_log_name, 'w') as file:
+        file.write(','.join(dataset_obj['file_list']))
 
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
-    deploy()
+    logging.config.fileConfig('logging.conf')
+    deploy_latest()
