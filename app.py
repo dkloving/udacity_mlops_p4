@@ -82,8 +82,8 @@ def scoring():
 def summarystats():
     """Returns summary statistics about the dataset used to train the current model
     """
-    summary = get_summary_data().to_html()
-    response = make_response(summary)
+    summary = get_summary_data().to_json(index=False, orient='split')
+    response = make_response(jsonify({"summary": summary}))
     return response
 
 
