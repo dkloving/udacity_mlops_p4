@@ -38,7 +38,11 @@ The following diagnostic items are tracked for each dataset.
 
 ### Deployment
 For serving of the model and associated metrics, a number of files are written to a deployment folder specified in the config.
- - `trainedmodel.pkl` 
+ - `trainedmodel.pkl` the trained model
+ - `dataset_summary.csv` summary statistics of the dataset used during training
+ - `ingestedfiles.txt` list of the source files used for training
+ - `latestscore.txt` f1 score as well as timing information
+ - `packages.csv` pip packages installed vs latest-available version generated during training
 
 ### Pipeline Automation
 ![project pipeline](./images/pipeline.png)
