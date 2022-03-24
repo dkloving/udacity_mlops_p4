@@ -129,7 +129,7 @@ class ProjectDB:
 
     @classmethod
     def get_latest_model(cls):
-        model = {'id': None, 'model_pkl': None, 'training_dataset': None, 'creation_date': None}
+        model = {'id': None, 'model': None, 'training_dataset': None, 'creation_date': None}
         cls._cursor.execute("SELECT * FROM models ORDER BY id DESC;")
         latest_dataset = cls._cursor.fetchone()
         if latest_dataset is not None:

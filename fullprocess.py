@@ -87,6 +87,10 @@ if __name__ == '__main__':
         if not model_drift:
             quit()
 
+
+    logging.info("Ingesting data...")
+    ingestion.merge_multiple_dataframe()
+
     logging.info("Training and Scoring new model...")
     training.train_model()
 
