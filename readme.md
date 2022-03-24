@@ -1,5 +1,7 @@
 # Udacity MLOps Nanodegree Final Project
 
+Note to reviewers: see all required generated files in `generated_files` folder.
+
 ## Key Assumptions
  - New data files (`csv`) are deposited into a specified folder.
  - All files in the specified folder should be combined into a single dataset.
@@ -45,4 +47,13 @@ For serving of the model and associated metrics, a number of files are written t
  - `packages.csv` pip packages installed vs latest-available version generated during training
 
 ### Pipeline Automation
+Automation is accomplished with a cronjob running `fullprocess.py` at regular intervals. This works as follows:
+
 ![project pipeline](./images/pipeline.png)
+
+## Serving
+Deployed files are served on an API implemented with Flask in `app.py`.
+Tests for this API are provided in `apicalls.py`.
+
+*Note one limitation in this implementation as specified by the project rubric is the API
+can only provide predictions for files residing on the file system of the web app.
