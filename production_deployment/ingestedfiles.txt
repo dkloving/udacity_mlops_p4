@@ -1,3 +1,0 @@
-2022-03-10 13:17:08.792057
-practicedata\dataset1.csv
-practicedata\dataset2.csv
