@@ -1,1 +1,10 @@
 /env/
+__pycache__/apicalls.cpython-37.pyc
+__pycache__/app.cpython-37.pyc
+__pycache__/dbsetup.cpython-37.pyc
+__pycache__/deployment.cpython-37.pyc
+__pycache__/diagnostics.cpython-37.pyc
+__pycache__/ingestion.cpython-37.pyc
+__pycache__/reporting.cpython-37.pyc
+__pycache__/scoring.cpython-37.pyc
+__pycache__/training.cpython-37.pyc
